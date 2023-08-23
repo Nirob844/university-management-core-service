@@ -2,33 +2,32 @@ import express from 'express';
 import { ENUM_USER_ROLE } from '../../../enums/user';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
-import { FacultyController } from './faculty.controller';
-import { FacultyValidation } from './faculty.validations';
+import { RoomController } from './room.controller';
+import { RoomValidation } from './room.validation';
 
 const router = express.Router();
 
-router.get('/', FacultyController.getAllFromDB);
-
-router.get('/:id', FacultyController.getByIdFromDB);
+router.get('/', RoomController.getAllFromDB);
+router.get('/:id', RoomController.getByIdFromDB);
 
 router.post(
   '/',
+  validateRequest(RoomValidation.create),
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
-  validateRequest(FacultyValidation.create),
-  FacultyController.insertIntoDB
+  RoomController.insertIntoDB
 );
 
 router.patch(
   '/:id',
+  validateRequest(RoomValidation.update),
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
-  validateRequest(FacultyValidation.update),
-  FacultyController.updateOneInDB
+  RoomController.updateOneInDB
 );
 
 router.delete(
   '/:id',
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
-  FacultyController.deleteByIdFromDB
+  RoomController.deleteByIdFromDB
 );
 
-export const facultyRoutes = router;
+export const roomRoutes = router;

@@ -10,6 +10,7 @@ const router = express.Router();
 router.get('/:id', AcademicSemesterController.getDataById);
 router.patch(
   '/:id',
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
   validateRequest(AcademicSemesterValidation.update),
   AcademicSemesterController.updateOneInDB
 );
@@ -21,6 +22,7 @@ router.delete(
 );
 router.post(
   '/',
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
   validateRequest(AcademicSemesterValidation.create),
   AcademicSemesterController.insertIntoDB
 );
