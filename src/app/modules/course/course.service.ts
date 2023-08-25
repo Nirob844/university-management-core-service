@@ -1,15 +1,20 @@
-import { Course, Prisma } from '@prisma/client';
+import { Course, CourseFaculty, Prisma } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
+import { asyncForEach } from '../../../shared/utils';
 import { courseSearchableFields } from './course.constants';
-import { ICourseCreateData, ICourseFilterRequest } from './course.interface';
+import {
+  ICourseCreateData,
+  ICourseFilterRequest,
+  IPrerequisiteCourseRequest,
+} from './course.interface';
 
 const insertIntoDB = async (data: ICourseCreateData): Promise<any> => {
-  const { preRequisiteCourses, ...courseData } = data;
+  const { prerequisiteCourses: prerequisiteCourses, ...courseData } = data;
 
   const newCourse = await prisma.$transaction(async transactionClient => {
     const result = await transactionClient.course.create({
@@ -20,17 +25,20 @@ const insertIntoDB = async (data: ICourseCreateData): Promise<any> => {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Unable to create course');
     }
 
-    if (preRequisiteCourses && preRequisiteCourses.length > 0) {
-      for (let index = 0; index < preRequisiteCourses.length; index++) {
-        const createPrerequisite =
-          await transactionClient.courseToPrerequisite.create({
-            data: {
-              courseId: result.id,
-              preRequisiteId: preRequisiteCourses[index].courseId,
-            },
-          });
-        console.log(createPrerequisite);
-      }
+    if (prerequisiteCourses && prerequisiteCourses.length > 0) {
+      await asyncForEach(
+        prerequisiteCourses,
+        async (preRequisiteCourse: IPrerequisiteCourseRequest) => {
+          const createPrerequisite =
+            await transactionClient.courseToPrerequisite.create({
+              data: {
+                courseId: result.id,
+                preRequisiteId: preRequisiteCourse.courseId,
+              },
+            });
+          console.log(createPrerequisite);
+        }
+      );
     }
     return result;
   });
@@ -155,10 +163,10 @@ const updateIntoDb = async (
   id: string,
   payload: ICourseCreateData
 ): Promise<Course | null> => {
-  const { preRequisiteCourses, ...courseData } = payload;
+  const { prerequisiteCourses: prerequisiteCourses, ...courseData } = payload;
 
-  await prisma.$transaction(async transactionClint => {
-    const result = await transactionClint.course.update({
+  await prisma.$transaction(async transactionClient => {
+    const result = await transactionClient.course.update({
       where: {
         id,
       },
@@ -167,38 +175,45 @@ const updateIntoDb = async (
     if (!result) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'unable to update course');
     }
-    if (preRequisiteCourses && preRequisiteCourses.length > 0) {
-      const deletePreRequest = preRequisiteCourses.filter(
+    if (prerequisiteCourses && prerequisiteCourses.length > 0) {
+      const deletePrerequisite = prerequisiteCourses.filter(
         coursePreRequest =>
           coursePreRequest.courseId && coursePreRequest.isDeleted
       );
-      const newPreRequest = preRequisiteCourses.filter(
+      const newPrerequisite = prerequisiteCourses.filter(
         coursePreRequest =>
           coursePreRequest.courseId && !coursePreRequest.isDeleted
       );
 
-      for (let index = 0; index < deletePreRequest.length; index++) {
-        await transactionClint.courseToPrerequisite.deleteMany({
-          where: {
-            AND: [
-              {
-                courseId: id,
-              },
-              {
-                preRequisiteId: deletePreRequest[index].courseId,
-              },
-            ],
-          },
-        });
-      }
-      for (let index = 0; index < newPreRequest.length; index++) {
-        await transactionClint.courseToPrerequisite.create({
-          data: {
-            courseId: id,
-            preRequisiteId: newPreRequest[index].courseId,
-          },
-        });
-      }
+      await asyncForEach(
+        deletePrerequisite,
+        async (deletePreCourse: IPrerequisiteCourseRequest) => {
+          await transactionClient.courseToPrerequisite.deleteMany({
+            where: {
+              AND: [
+                {
+                  courseId: id,
+                },
+                {
+                  preRequisiteId: deletePreCourse.courseId,
+                },
+              ],
+            },
+          });
+        }
+      );
+
+      await asyncForEach(
+        newPrerequisite,
+        async (insertPrerequisite: IPrerequisiteCourseRequest) => {
+          await transactionClient.courseToPrerequisite.create({
+            data: {
+              courseId: id,
+              preRequisiteId: insertPrerequisite.courseId,
+            },
+          });
+        }
+      );
     }
     return result;
   });
@@ -244,10 +259,60 @@ const deleteByIdFromDB = async (id: string): Promise<Course> => {
   return result;
 };
 
+const assignFaculties = async (
+  id: string,
+  payload: string[]
+): Promise<CourseFaculty[]> => {
+  await prisma.courseFaculty.createMany({
+    data: payload.map(facultyId => ({
+      courseId: id,
+      facultyId: facultyId,
+    })),
+  });
+
+  const assignFacultiesData = await prisma.courseFaculty.findMany({
+    where: {
+      courseId: id,
+    },
+    include: {
+      faculty: true,
+    },
+  });
+
+  return assignFacultiesData;
+};
+
+const removeFaculties = async (
+  id: string,
+  payload: string[]
+): Promise<CourseFaculty[] | null> => {
+  await prisma.courseFaculty.deleteMany({
+    where: {
+      courseId: id,
+      facultyId: {
+        in: payload,
+      },
+    },
+  });
+
+  const assignFacultiesData = await prisma.courseFaculty.findMany({
+    where: {
+      courseId: id,
+    },
+    include: {
+      faculty: true,
+    },
+  });
+
+  return assignFacultiesData;
+};
+
 export const CourseService = {
   insertIntoDB,
   getAllFromDB,
   getByIdFromDB,
   deleteByIdFromDB,
   updateIntoDb,
+  assignFaculties,
+  removeFaculties,
 };
