@@ -14,7 +14,10 @@ import {
 } from './course.interface';
 
 const insertIntoDB = async (data: ICourseCreateData): Promise<any> => {
-  const { prerequisiteCourses: prerequisiteCourses, ...courseData } = data;
+  const { preRequisiteCourses, ...courseData } = data;
+
+  console.log('course data', courseData);
+  console.log('pre requisite course data: ', preRequisiteCourses);
 
   const newCourse = await prisma.$transaction(async transactionClient => {
     const result = await transactionClient.course.create({
@@ -25,9 +28,9 @@ const insertIntoDB = async (data: ICourseCreateData): Promise<any> => {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Unable to create course');
     }
 
-    if (prerequisiteCourses && prerequisiteCourses.length > 0) {
+    if (preRequisiteCourses && preRequisiteCourses.length > 0) {
       await asyncForEach(
-        prerequisiteCourses,
+        preRequisiteCourses,
         async (preRequisiteCourse: IPrerequisiteCourseRequest) => {
           const createPrerequisite =
             await transactionClient.courseToPrerequisite.create({
@@ -163,7 +166,7 @@ const updateIntoDb = async (
   id: string,
   payload: ICourseCreateData
 ): Promise<Course | null> => {
-  const { prerequisiteCourses: prerequisiteCourses, ...courseData } = payload;
+  const { preRequisiteCourses: preRequisiteCourses, ...courseData } = payload;
 
   await prisma.$transaction(async transactionClient => {
     const result = await transactionClient.course.update({
@@ -175,12 +178,12 @@ const updateIntoDb = async (
     if (!result) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'unable to update course');
     }
-    if (prerequisiteCourses && prerequisiteCourses.length > 0) {
-      const deletePrerequisite = prerequisiteCourses.filter(
+    if (preRequisiteCourses && preRequisiteCourses.length > 0) {
+      const deletePrerequisite = preRequisiteCourses.filter(
         coursePreRequest =>
           coursePreRequest.courseId && coursePreRequest.isDeleted
       );
-      const newPrerequisite = prerequisiteCourses.filter(
+      const newPrerequisite = preRequisiteCourses.filter(
         coursePreRequest =>
           coursePreRequest.courseId && !coursePreRequest.isDeleted
       );
