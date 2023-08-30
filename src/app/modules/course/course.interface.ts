@@ -2,7 +2,7 @@ export type ICourseCreateData = {
   title: string;
   code: string;
   credits: number;
-  prerequisiteCourses: IPrerequisiteCourseRequest[];
+  preRequisiteCourses: IPrerequisiteCourseRequest[];
 };
 
 export type IPrerequisiteCourseRequest = {
