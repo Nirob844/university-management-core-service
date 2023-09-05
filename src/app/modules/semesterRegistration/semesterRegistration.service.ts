@@ -351,7 +351,7 @@ const confirmMyRegistration = async (
     },
   });
   return {
-    message: 'Your registration is confirmed!',
+    message: 'your registration is confirmed!',
   };
 };
 
