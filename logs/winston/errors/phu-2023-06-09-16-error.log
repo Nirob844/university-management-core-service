@@ -1,0 +1,17 @@
+Wed Sep 06 2023 16:21:44 } [PH] error: 
+Invalid `prisma.studentEnrolledCourse.create()` invocation:
+
+{
+  data: {
+    studentId: "40ded8e4-8dbe-4576-8b14-0d75198cc2ff",
+    courseId: "3395e44f-86c8-46bc-aeb3-eb114ddab0d8",
+    academicSemester: "9651f27b-94c5-47bc-a8ad-10e2013c7d9c",
++   student: {
++     create: StudentCreateWithoutStudentEnrolledCoursesInput | StudentUncheckedCreateWithoutStudentEnrolledCoursesInput,
++     connectOrCreate: StudentCreateOrConnectWithoutStudentEnrolledCoursesInput,
++     connect: StudentWhereUniqueInput
++   }
+  }
+}
+
+Argument `student` is missing.
