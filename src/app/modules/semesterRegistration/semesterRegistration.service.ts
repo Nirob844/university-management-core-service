@@ -441,7 +441,7 @@ const startNewSemester = async (
     });
 
     const studentSemesterRegistrations =
-      await prisma.studentSemesterRegistration.findMany({
+      await prismaTransactionClient.studentSemesterRegistration.findMany({
         where: {
           semesterRegistration: {
             id,
