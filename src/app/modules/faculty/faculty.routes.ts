@@ -17,17 +17,22 @@ router.get(
 
 router.get('/:id', FacultyController.getByIdFromDB);
 
+router.get(
+  '/my-course-students',
+  auth(ENUM_USER_ROLE.FACULTY),
+  FacultyController.getMyCourseStudents
+);
+
 router.post(
   '/',
-  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
   validateRequest(FacultyValidation.create),
   FacultyController.insertIntoDB
 );
 
 router.patch(
   '/:id',
-  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
   validateRequest(FacultyValidation.update),
+  auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
   FacultyController.updateOneInDB
 );
 
