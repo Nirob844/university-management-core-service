@@ -308,7 +308,6 @@ const confirmMyRegistration = async (
     },
   });
 
-  // 3 - 6
   const studentSemesterRegistration =
     await prisma.studentSemesterRegistration.findFirst({
       where: {
@@ -595,7 +594,6 @@ const getMySemesterRegCorses = async (authUserId: string) => {
         offeredCourseSection: true,
       },
     });
-  console.log(studentCurrentSemesterTakenCourse);
 
   const offeredCourse = await prisma.offeredCourse.findMany({
     where: {
