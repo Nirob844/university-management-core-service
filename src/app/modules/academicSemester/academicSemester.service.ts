@@ -140,7 +140,6 @@ const deleteByIdFromDB = async (id: string): Promise<AcademicSemester> => {
     );
   }
   return result;
-  return result;
 };
 
 export const AcademicSemesterService = {
