@@ -45,7 +45,6 @@ const getAllFromDB = async (
 ): Promise<IGenericResponse<AcademicSemester[]>> => {
   const { page, limit, skip } = paginationHelpers.calculatePagination(options);
   const { searchTerm, ...filterData } = filters;
-  console.log(options);
   const andConditions = [];
 
   if (searchTerm) {
