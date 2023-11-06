@@ -105,6 +105,7 @@ const getMyCourseStudents = catchAsync(async (req: Request, res: Response) => {
     'courseId',
     'offeredCourseSectionId',
   ]);
+  console.log(filters);
   const options = pick(req.query, ['limit', 'page']);
   const result = await FacultyService.getMyCourseStudents(
     filters,

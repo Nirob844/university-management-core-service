@@ -23,6 +23,7 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateStudentMarks = catchAsync(async (req: Request, res: Response) => {
+  console.log('update mark', req.body);
   const result = await StudentEnrolledCourseMarkService.updateStudentMarks(
     req.body
   );

@@ -28,7 +28,9 @@ router.patch(
 router.patch(
   '/update-final-marks',
   auth(ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.FACULTY),
-  validateRequest(StudentEnrolledCourseMarkValidation.updateStudentMarks),
+  validateRequest(
+    StudentEnrolledCourseMarkValidation.updateStudentCourseFinalMarks
+  ),
   StudentEnrolledCourseMarkController.updateFinalMarks
 );
 
